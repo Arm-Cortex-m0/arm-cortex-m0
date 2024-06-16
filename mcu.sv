@@ -135,10 +135,21 @@ module mcu(
 		.r1_data(r1_data)
 	);
 	
+	// Fordwarding Unit_2
+	
 	
 	/*--------------------
 	Excute
 	--------------------*/
+	
+	logic MOV_imm, ADDS_reg;
+	assign MOV_imm = ir_q[31:27] == 5'b00100;
+	assign ADDS_reg = ir_q[31:25] == 7'b0001100;
+	
+	// Fordwarding Unit_1
+	
+	
+	
 	// ALU
 	logic [3:0] opcode;
 	logic [3:0] flag, flag_q;
@@ -152,6 +163,38 @@ module mcu(
 		.result(result)
 	);
 
+	/*--------------------
+	Memory Access
+	--------------------*/
+	
+	logic write_enable; // decode 之後可得知
+	logic [1:0] size;   // decode 之後可得知
+	logic [31:0] mem_read;
+	single_port_ram single_port_ram_1(
+		.clk(clk),           
+		.rst(rst),           
+		.size(size),       // 資料大小選擇（00: 8-bit, 01: 16-bit, 10: 32-bit）
+		.write_enable(write_enable),  
+		.address(result),  // 記憶體位址
+		.write_data(),     // 根據不同指令選擇不同目的
+		.read_data(mem_read)      
+	);
+	
+	
+	/*--------------------
+	Write Back
+	--------------------*/
+	
+	logic sel_write_back_data;
+	logic [31:0] write_back_data;
+	// Mux: 選擇寫回暫存器的資料
+	always_comb begin
+		case(sel_write_back_data)
+			0: write_back_data = result; // ALU 的計算結果
+			1: write_back_data = mem_read;
+		endcase
+	end
+	
 					 
 	// Controller
 	always_comb begin
@@ -170,6 +213,8 @@ module mcu(
 		sel_mem_0 = 0;  // 程式記憶體
 		sel_mem_1 = 1;  // 程式記憶體
 		
+		// EX
+		
 		ns = ps;
 		case(ps)
 			T0:
@@ -184,8 +229,8 @@ module mcu(
 			T2: // ID
 				begin
 					// IF
-					load_mar = 1;
-					load_IF_ID_reg = 1; 
+					// load_mar = 1;
+					// load_IF_ID_reg = 1; 
 					// ID
 					load_pc = 1;
 					if (isThumb) begin
@@ -200,9 +245,17 @@ module mcu(
 					end
 					ns = T0;
 				end
-			/*T3: // EX
+			T3: // EX
 				begin
-				
+					
+					// EX
+					if(MOV_imm) begin
+						opcode = 8;
+					end
+					if(ADDS_reg) begin
+						opcode = 0;
+					end
+					ns = T0;
 				end
 			T4: // MEM
 				begin
@@ -211,7 +264,7 @@ module mcu(
 			T5: // WB
 				begin
 				
-				end*/
+				end
 		endcase
 	end
 
