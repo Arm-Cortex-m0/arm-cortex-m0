@@ -1,7 +1,8 @@
-module inst_decoder
+module inst_decode
     (
 		input logic [15:0] ir_q0,
-		input logic [15:1] ir_q1,
+		input logic [15:0] ir_q1,
+		input logic isThumb,
 		output logic [6:0] cmd,
 		// 現在只會用到低位暫存器 0~7 但如果有權限較高的指令用到高位暫存器，就會需要 4bit 如規格書 ADD_reg 的 T2
 		output logic [3:0] Rm,  // 低階指令只能存取權限較低的暫存器 0~7，所以是 3 個 bit
@@ -24,11 +25,8 @@ module inst_decoder
 			  ADD_imm8 = 7'd9,  
 			  SUB_imm8 = 7'd10;
 	
-	assign isThumb = ir_q0[15:11] != 5'b11101 &&
-					 ir_q0[15:11] != 5'b11110 &&
-					 ir_q0[15:11] != 5'b11111;
 	
-	always_comb begin
+	/*always_comb begin
 		if(isThumb) 
 			begin
 				// casez 如果某些位子的值為高阻 z，那麼對這些位子的比較就會忽略
@@ -83,7 +81,73 @@ module inst_decoder
 				// Do nothing
 			end
 		endcase
-	end
+	end*/
+	
+	
+    logic [4:0] imm5;
+    logic [7:0] imm8;
+    logic [10:0] imm10;
+	
+	always_comb begin
+        cmd = 0; 
+        Rm = 0;
+        Rn = 0;
+        Rd = 0;
+        imm5 = 0;
+        imm8 = 0;
+        imm10 = 0;
+
+        if(isThumb) begin
+            unique casez(ir_q0[15:14])
+                2'b00: // 規格書 p.85
+                    unique casez(ir_q0[13:9])
+                        // 5'b000xx: cmd = LSL_imm;  //0
+                        // 5'b001xx: cmd = LSR_imm;  //1
+                        // 5'b010xx: cmd = ASR_imm;  //2
+                        5'b01100: cmd = ADD_reg;  //3
+                        5'b01101: cmd = SUB_reg;  //4
+                        5'b01110: cmd = ADD_imm3; //5
+                        5'b01111: cmd = SUB_imm3; //6
+                        5'b100??: cmd = MOV_imm;  //7
+                        // 5'b101xx: cmd = CMP_imm;  //8
+                        // 5'b110xx: cmd = ADD_imm8; //9
+                        // 5'b111xx: cmd = SUB_imm8; //10
+                        default: cmd = 0;
+                    endcase
+                default: cmd = 0;
+            endcase
+        end
+
+        
+        case(cmd)
+            LSL_imm:  begin imm5 = ir_q0[10:6]; Rm = ir_q0[5:3]; Rd = ir_q0[2:0]; end // 規格書 p.150 
+            LSR_imm:  begin imm5 = ir_q0[10:6]; Rm = ir_q0[5:3]; Rd = ir_q0[2:0]; end // 規格書 p.152
+            ASR_imm:  begin imm5 = ir_q0[10:6]; Rm = ir_q0[5:3]; Rd = ir_q0[2:0]; end // 規格書 p.117
+            ADD_reg:  begin Rm = ir_q0[8:6]; Rn = ir_q0[5:3]; Rd = ir_q0[2:0]; end   // 規格書 p.109 見註解[1] 
+            SUB_reg:  begin Rm = ir_q0[8:6]; Rn = ir_q0[5:3]; Rd = ir_q0[2:0]; end   // 規格書 p.
+            ADD_imm3: begin imm5 = ir_q0[8:6]; Rn = ir_q0[5:3]; Rd = ir_q0[2:0]; end // 規格書 p.
+            SUB_imm3: begin imm5 = ir_q0[8:6]; Rn = ir_q0[5:3]; Rd = ir_q0[2:0]; end // 規格書 p.
+            MOV_imm:  begin Rd = ir_q0[10:8]; imm8 = ir_q0[7:0]; end                 // 規格書 p.154
+            CMP_imm:  begin Rn = ir_q0[10:8]; imm8 = ir_q0[7:0]; end                 // 規格書 p.
+            ADD_imm8: begin Rn = ir_q0[10:8]; imm8 = ir_q0[7:0]; end                 // 規格書 p.
+            SUB_imm8: begin Rn = ir_q0[10:8]; imm8 = ir_q0[7:0]; end                 // 規格書 p.
+            default: begin
+                // 預設值防止產生latch
+                imm5 = 0;
+                imm8 = 0;
+                imm10 = 0;
+                Rm = 0;
+                Rn = 0;
+                Rd = 0;
+            end
+        endcase
+    end
+
+
+	
+	
+	
+	
 	
 	assign imm = imm8;
 
