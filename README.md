@@ -8,5 +8,5 @@
 * Hardware single-cycle ( 32x32 ) multiply
 ## Program Rom 生成方式
 1. 撰寫 Arm 組合語言
-2. 透過 Keil uVision5 Debugger 產生 機器碼
-3. 使用 asm2sv_.py 即可將其轉換成 Program Rom
+2. 透過 Keil uVision5 Debugger 產生機器碼
+3. 使用 asm2sv_.py 即可將機器碼轉換成 Program Rom
