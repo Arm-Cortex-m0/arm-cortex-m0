@@ -1,25 +1,12 @@
 module ALU
 (	
 	input logic  [3:0]opcode,
-	input logic  [31:0]op1,op2,
+	input logic  [31:0]op1, op2,
 	input logic  [3:0]flag,
 	output logic [3:0]flag_q,
 	output logic [31:0]result
 );
 	logic [32:0] res_temp;
-	/*parameter ADD = 0,
-			  ADC = 1,
-			  SUB = 2,
-			  SUB_r = 3,
-			  SUBC = 4,
-			  AND = 5,
-			  OR = 6,
-			  XOR = 7,
-			  MOV = 8,
-			  ADD1 = 9,
-			  SUB1 = 10,
-			  ZERO = 11,
-			  NOR = 12;*/
 		
 	always_comb
 	begin 
@@ -32,7 +19,7 @@ module ALU
 			4'h5: res_temp = op1 & op2;
 			4'h6: res_temp = op1 | op2;
 			4'h7: res_temp = op1 ^ op2;
-			4'h8: res_temp = op1;
+			4'h8: res_temp = op2;
 			4'h9: res_temp = op1 + 1;
 			4'hA: res_temp = op1 - 1;
 			4'hB: res_temp = 0;

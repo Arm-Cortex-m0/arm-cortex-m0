@@ -4,7 +4,7 @@ module single_port_ram
 		input  logic        rst,           
 		input  logic [1:0]  size,          // 資料大小選擇（00: 8-bit, 01: 16-bit, 10: 32-bit）
 		input  logic        write_enable,  
-		input  logic [31:0] address,       // 記憶體位址
+		input  logic [9:0]  address,       // 記憶體位址
 		input  logic [31:0] write_data,    
 		output logic [31:0] read_data      
 	);

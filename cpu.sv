@@ -4,34 +4,48 @@ module cpu
 		input rst
 	);
 	
-	// Program Counter
-	logic sel_pc;
-	logic load_pc;
-	logic [15:0] pc, pc_next;
+	/*--------------------
+	Instruction Fetch
+	--------------------*/
 	
-	
-	// Mux Instruction Length (the number of byte)
+	// Mux: Select instruction length (the number of byte)
 	logic sel_inst_len;
 	logic [2:0] inst_len;
 	always_comb begin
 		case(sel_inst_len)
-		0: inst_len = 4;
-		1: inst_len = 2;
+			0: inst_len = 4; // 32 bits 
+			1: inst_len = 2; // 16 bits 
 		endcase
 	end
 	
-	// Mux PC
+	// Mux: Select next instruction address
+	logic sel_pc_offset;
+	logic [2:0] pc_offset;
+	always_comb begin
+		case(sel_pc_offset)
+			0: pc_offset = inst_len;
+			1: pc_offset = 0; // from branch offset !!!
+		endcase
+	end
+	
+	// Mux: Select next pc address
+	logic sel_pc;
 	assign sel_pc = 0;
 	always_comb begin
 		case (sel_pc)
-		0: pc_next = pc + inst_len;
-		1: pc_next = 0; //????
+			0: pc_next = pc + pc_offset;
+			1: pc_next = 0; // from ALU result !!!
 		endcase
 	end
 	
+	// Program Counter
+	logic load_pc;
+	logic [15:0] pc, pc_next;
 	always_ff @(posedge clk) begin
-		if (rst)     pc <= 0;
-		if (load_pc) pc <= pc_next;
+		if (rst)          
+			pc <= 0;
+		else if (load_pc) 
+			pc <= pc_next;
 	end
 	
 	// MAR(memmory address register) T1 
@@ -96,6 +110,9 @@ module cpu
 		.imm(imm)
 	);
 
+	/*--------------------
+	Instruction Decode
+	--------------------*/
 	
 	// Register File
 	logic [3:0] r0_addr, r1_addr, w_addr;
@@ -112,7 +129,9 @@ module cpu
 		.r1_data(r1_data)
 	);
 	
-	
+	/*--------------------
+	Excute
+	--------------------*/
 	
 	// ALU
 	logic [3:0] opcode;
@@ -127,6 +146,16 @@ module cpu
 		.result(result)
 	);
 	
+	/*--------------------
+	Memory Access
+	--------------------*/
+
+	
+	/*--------------------
+	Write Back
+	--------------------*/
+	
+
 	
 	
 	
