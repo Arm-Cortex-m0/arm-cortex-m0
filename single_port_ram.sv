@@ -51,7 +51,7 @@ module single_port_ram
     end
 
     // 讀操作
-    always_ff @(posedge clk) begin
+	always_ff @(negedge clk) begin
         if (rst) begin
             temp_read_data <= 32'b0;
         end else begin
