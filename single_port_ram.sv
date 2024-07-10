@@ -26,9 +26,9 @@ module single_port_ram
                 2'b00: begin // 8-bit
 					case (address[1:0])
 						2'b00: mem0[address[9:2]] <= write_data[7:0];
-						2'b01: mem1[address[9:2]] <= write_data[15:8];
-						2'b10: mem2[address[9:2]] <= write_data[23:16];
-						2'b11: mem3[address[9:2]] <= write_data[31:24];
+						2'b01: mem1[address[9:2]] <= write_data[7:0];
+						2'b10: mem2[address[9:2]] <= write_data[7:0];
+						2'b11: mem3[address[9:2]] <= write_data[7:0];
 					endcase
                 end
                 2'b01: begin // 16-bit
@@ -36,8 +36,8 @@ module single_port_ram
                         mem0[address[9:2]] <= write_data[7:0];
                         mem1[address[9:2]] <= write_data[15:8];
                     end else begin
-                        mem2[address[9:2]] <= write_data[23:16];
-                        mem3[address[9:2]] <= write_data[31:24];
+                        mem2[address[9:2]] <= write_data[7:0];
+                        mem3[address[9:2]] <= write_data[15:8];
                     end
                 end
                 2'b10: begin // 32-bit
@@ -51,10 +51,11 @@ module single_port_ram
     end
 
     // 讀操作
-	always_ff @(negedge clk) begin
+    always_ff @(negedge clk) begin
         if (rst) begin
             temp_read_data <= 32'b0;
-        end else begin
+        end 
+		else begin
             case (size) // 論文裡的8/16/32_Arbitrator 訊號 選擇讀取出幾bits資料
                 2'b00: begin // 8-bit
                     case (address[1:0]) 
