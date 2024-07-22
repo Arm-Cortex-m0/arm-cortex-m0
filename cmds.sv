@@ -71,12 +71,12 @@ parameter	ADD_SP_imm7 	= 7'd52,
 			SXTB		 	= 7'd55,
 			UXTH		 	= 7'd56,
 			UXTB		 	= 7'd57,
-			PUSH		 	= 7'd58,
+			PUSH_REGS		= 7'd58,
 			CPS			 	= 7'd59,
 			REV			 	= 7'd60,
 			REV16		 	= 7'd61,
 			REVSH		 	= 7'd62,
-			POP			 	= 7'd63,
+			POP_REGS		= 7'd63,
 			BKPT		 	= 7'd63,
 			HINT		 	= 7'd64;
 			
@@ -93,7 +93,19 @@ parameter 	STM				= 7'd71;
 
 // 規格書 p.137
 parameter	LDM				= 7'd72;
-			
+
+// 規格書 p.119
+parameter	B_COND			= 7'd73;
+
+// 規格書 p.119
+parameter	B_UNCOND		= 7'd74;
+		
+// 規格書 p.91
+parameter   MSR_reg			= 7'd75,
+			MRS				= 7'd76,		
+			BL 				= 7'd77;
+		
+		
 parameter   DATA_N = 32,
 	        SIZE   = 16;
 			
@@ -115,5 +127,12 @@ parameter   ADD_OP       = 5'b00000,
 			ASR_OP       = 5'b01111, // Arithmetic Shift Right 
 			ROR_OP       = 5'b10000, // Rotate Right 
 			MUL_OP       = 5'b10001, // Multiply
-			BIC_OP       = 5'b10010; // Bit Clear
+			BIC_OP       = 5'b10010, // Bit Clear
+			SEH_OP       = 5'b10011, // Signed Extend Halfword
+			SEB_OP       = 5'b10100, // Signed Extend Byte
+			UEH_OP       = 5'b10101, // UnSigned Extend Halfword
+			UEB_OP       = 5'b10110, // UnSigned Extend Byte
+			REV_OP       = 5'b10111, // Byte-Reverse Word
+			REV16_OP     = 5'b11000, // Byte-Reverse Packed Halfword
+			REVSH_OP     = 5'b11001; // Byte-Reverse Signed Halfword
         
