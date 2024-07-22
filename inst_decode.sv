@@ -11,7 +11,9 @@ module inst_decode
 		output logic [3:0] 		Rn,
 		output logic [3:0] 		Rd,
 		output logic [3:0] 		Rt,
-		output logic [31:0] 	imm 
+		output logic [31:0] 	imm, 
+		output logic [7:0]   	SYSm, 
+		output logic [15:0] 	registers 
 		// 雖然論文的 16bit 指令中，最大的立即數為 11 個 bit ( imm11 ) ( 這種寫法以後 signed bit 有問題再改 )
 	);
 	
@@ -32,7 +34,8 @@ module inst_decode
 		LOAD_MULTIPLE_REGISTERS,
 		CONDITIONAL_BRANCH_and_SUPERVISOR_CALL,
 		UNCONDITIONAL_BRANCH,
-		UNDEFINED_TYPE 
+		UNDEFINED_TYPE,
+		BRANCH_and_MISCELLANEOUS_CONTROL		
 	  } 
 	inst_types;
 
@@ -58,9 +61,11 @@ module inst_decode
 				6'b11100?: inst_type = UNCONDITIONAL_BRANCH;
 			endcase
 		else 
-			begin
-				// TODO 32bit
-				inst_type = UNDEFINED_TYPE; // 未定義行為
+			begin // 32bit
+				unique casez({ir_q0[15:11],ir_q1[15]})	// 規格書 p.91
+					6'b111?1?: inst_type = UNDEFINED_TYPE; // 未定義行為
+					6'b111101: inst_type = BRANCH_and_MISCELLANEOUS_CONTROL;
+				endcase
 			end
 	end
 	
@@ -138,38 +143,50 @@ module inst_decode
 				cmd = ADD_SP_imm8;
 			MISCELLANEOUS: // 規格書 p.89
 				casez(ir_q0[11:5])
-				7'b00000??: cmd = ADD_SP_imm7;
-				7'b00001??: cmd = SUB_SP_imm7;
-				7'b001000?: cmd = SXTH		 ;
-				7'b001001?: cmd = SXTB		 ;
-				7'b001010?: cmd = UXTH		 ;
-				7'b001011?: cmd = UXTB		 ;
-				7'b010????: cmd = PUSH		 ;
-				7'b0110011: cmd = CPS		 ;
-				7'b101000?: cmd = REV		 ;
-				7'b101001?: cmd = REV16		 ;
-				7'b101011?: cmd = REVSH		 ;
-				7'b110????: cmd = POP		 ;
-				7'b1110???: cmd = BKPT		 ;
-				7'b1111???: // cmd = HINT;
-					case({ir_q0[7:4],ir_q0[3:0]})
-						{4'b0000,4'b0000}: cmd = NOP	;
-						{4'b0001,4'b0000}: cmd = YIELD	;
-						{4'b0010,4'b0000}: cmd = WFE	;
-						{4'b0011,4'b0000}: cmd = WFI	;
-						{4'b0100,4'b0000}: cmd = SEV	;
-					endcase
+					7'b00000??: cmd = ADD_SP_imm7;
+					7'b00001??: cmd = SUB_SP_imm7;
+					7'b001000?: cmd = SXTH		 ;
+					7'b001001?: cmd = SXTB		 ;
+					7'b001010?: cmd = UXTH		 ;
+					7'b001011?: cmd = UXTB		 ;
+					7'b010????: cmd = PUSH_REGS ;
+					7'b0110011: cmd = CPS		 ;
+					7'b101000?: cmd = REV		 ;
+					7'b101001?: cmd = REV16		 ;
+					7'b101011?: cmd = REVSH		 ;
+					7'b110????: cmd = POP_REGS	 ;
+					7'b1110???: cmd = BKPT		 ;
+					7'b1111???: // cmd = HINT;
+						case({ir_q0[7:4],ir_q0[3:0]})
+							{4'b0000,4'b0000}: cmd = NOP	;
+							{4'b0001,4'b0000}: cmd = YIELD	;
+							{4'b0010,4'b0000}: cmd = WFE	;
+							{4'b0011,4'b0000}: cmd = WFI	;
+							{4'b0100,4'b0000}: cmd = SEV	;
+						endcase
 				endcase
 			STORE_MULTIPLE_REGISTERS: // 規格書 p.84
 				case(ir_q0[15:10])
-				6'b11000?: cmd = STM;
+					6'b11000?: cmd = STM;
 				endcase
 			LOAD_MULTIPLE_REGISTERS: // 規格書 p.84
 				case(ir_q0[15:10])
-				6'b11001?: cmd = LDM;
+					6'b11001?: cmd = LDM;
 				endcase
-			//CONDITIONAL_BRANCH_and_SUPERVISOR_CALL: // 規格書 p.90
-			//	case
+			CONDITIONAL_BRANCH_and_SUPERVISOR_CALL: // 規格書 p.90
+				case(ir_q0[15:8])
+					8'b1101000?: cmd = B_COND;
+				endcase
+			UNCONDITIONAL_BRANCH:
+				case(ir_q0[15:11])
+					5'b11100: cmd = B_UNCOND;
+				endcase
+			BRANCH_and_MISCELLANEOUS_CONTROL:
+				unique casez({ir_q1[14:12],ir_q0[10:4]})
+					10'b0?0011100?: cmd = MSR_reg;
+					10'b0?0011111?: cmd = MRS;
+					10'b1?1???????: cmd = BL;
+				endcase
 		endcase
 	end
 	
@@ -177,7 +194,8 @@ module inst_decode
 	logic [4:0] 	imm5;
 	logic [6:0] 	imm7;
 	logic [7:0] 	imm8;
-	logic [10:0] 	imm10;
+	logic [9:0] 	imm10;
+	logic [10:0] 	imm11;
 	logic [7:0] 	register_list;
 	logic 			im;
 	always_comb begin
@@ -187,10 +205,13 @@ module inst_decode
 		imm7 	= 0;
 		imm8 	= 0;
 		imm10 	= 0;
+		imm11 	= 0;
 		Rm 		= 0;
 		Rn 		= 0;
 		Rd 		= 0;
 		Rt 		= 0;
+		SYSm    = 0;
+		registers = 0;
 		case(cmd)
 			// BASIC_OP 規格書 p.85
 			LSL_imm5: begin imm5 = ir_q0[10:6]; Rm = ir_q0[5:3]; Rd = ir_q0[2:0];  end // 規格書 p.150  LSLS{<q>} <Rd>, <Rm>, #<imm5>
@@ -222,10 +243,10 @@ module inst_decode
 			BIC_reg: begin Rm = ir_q0[5:3]; Rn = ir_q0[2:0]; Rd = ir_q0[2:0]; end // 規格書 p.121  BICS{<q>} {<Rd>,} <Rn>, <Rm>
 			MVN_reg: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0];                  end // 規格書 p.161  MVNS{<q>} <Rd>, <Rm>
 			// SPECIAL_DATA_INSTRUCTIONS_and_BX 規格書 p.87
-			ADD_regs: begin Rm = ir_q0[6:3]; Rn = ir_q0[2:0]; Rd = ir_q0[2:0]; end // 規格書 p.109  ADD{S}{<q>} {<Rd>,} <Rn>, <Rm>   DN ?
+			ADD_regs: begin Rm = ir_q0[6:3]; Rn = {ir_q0[7], ir_q0[2:0]}; Rd = {ir_q0[7], ir_q0[2:0]}; end // 規格書 p.109  ADD{S}{<q>} {<Rd>,} <Rn>, <Rm>   DN ?
 			UPREDCT:  begin end // 規格書 p.(沒東西)
-			CMP_reg2: begin Rm = ir_q0[6:3]; Rn = ir_q0[2:0]; end // 規格書 p.129  CMP{<q>} <Rn>, <Rm>     N ?
-			MOV_reg:  begin Rm = ir_q0[6:3]; Rd = ir_q0[2:0]; end // 規格書 p.155  MOV{S}{<q>} <Rd>, <Rm>  D ?
+			CMP_reg2: begin Rm = ir_q0[6:3]; Rn = {ir_q0[7], ir_q0[2:0]}; end // 規格書 p.129  CMP{<q>} <Rn>, <Rm>     N ?
+			MOV_reg:  begin Rm = ir_q0[6:3]; Rd = {ir_q0[7], ir_q0[2:0]}; end // 規格書 p.155  MOV{S}{<q>} <Rd>, <Rm>  D ?
 			BX:       begin Rm = ir_q0[6:3];                  end // 規格書 p.125  BX{<q>} <Rm>            [2:0] (0)(0)(0) ?
 			BLX:      begin Rm = ir_q0[6:3];                  end // 規格書 p.124  BLX{<q>} <Rm>
 			// LDR_LITERAL 規格書 p.141
@@ -258,28 +279,41 @@ module inst_decode
 			SXTB		: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0]; 	end // 規格書 p.190  SXTB{<q>} <Rd>, <Rm>
 			UXTH		: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0]; 	end // 規格書 p.196  UXTH{<q>} <Rd>, <Rm>
 			UXTB		: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0]; 	end // 規格書 p.195  UXTB{<q>} <Rd>, <Rm>
-			PUSH		: begin register_list = ir_q0[7:0];       	end // 規格書 p.167  PUSH{<q>} <registers>  M ?
-			CPS			: begin im = ir_q0[4]; 						end // 規格書 p.306  CPS<effect>{<q>} i  im (0) (0) (1) (0)??
+			PUSH_REGS   : begin registers = {1'b0, ir_q0[8], 6'b000000, ir_q0[7:0]}; end // 規格書 p.167  PUSH{<q>} <registers>  M ?
+			CPS			: begin im = ir_q0[4]; 					    end // 規格書 p.306  CPS<effect>{<q>} i  im (0) (0) (1) (0)??
 			REV			: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0];	end // 規格書 p.168	 REV{<q>} <Rd>, <Rm>
 			REV16		: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0];	end // 規格書 p.169	 REV16{<q>} <Rd>, <Rm>
 			REVSH		: begin Rm = ir_q0[5:3]; Rd = ir_q0[2:0];   end // 規格書 p.170  REVSH{<q>} <Rd>, <Rm>
-			POP			: begin register_list = ir_q0[7:0]; 		end // 規格書 p.165  POP{<q>} <registers>  P ?
+			POP_REGS	: begin registers = {ir_q0[8], 7'b0000000, ir_q0[7:0]}; end // 規格書 p.165  POP{<q>} <registers>  P ?
 			BKPT		: begin imm8 = ir_q0[7:0];				    end // 規格書 p.122	 BKPT{<q>} {#}<imm8>
-			//HINT		: // 規格書 p.90
+			// HINT		: // 規格書 p.90
 			NOP			: begin /* No additional decoding required */ end // 規格書 p.163  NOP{<q>}
 			YIELD		: begin /* No additional decoding required */ end // 規格書 p.199  YIELD{<q>}
 			WFE			: begin /* No additional decoding required */ end // 規格書 p.197  WFE{<q>}
 			WFI			: begin /* No additional decoding required */ end // 規格書 p.198  WFI{<q>}
 			SEV			: begin /* No additional decoding required */ end // 規格書 p.174  SEV{<q>}
 			// STORE_MULTIPLE_REGISTERS 規格書 p.84
-			STM			: begin Rn = ir_q0[10:8]; register_list = ir_q0[7:0]; end // 規格書 p.175  STM{IA|EA}{<q>} <Rn>!, <registers>
+			STM			: begin Rn = ir_q0[10:8]; registers = ir_q0[7:0]; end // 規格書 p.175  STM{IA|EA}{<q>} <Rn>!, <registers>
 			// LOAD_MULTIPLE_REGISTERS 規格書 p.84
-			LDM			: begin Rn = ir_q0[10:8]; register_list = ir_q0[7:0]; end // 規格書 p.137  LDM{<q>} <Rn>{!}, <registers>
-			
-			 
+			LDM			: begin Rn = ir_q0[10:8]; registers = ir_q0[7:0]; end // 規格書 p.137  LDM{<q>} <Rn>{!}, <registers>
+			// CONDITIONAL_BRANCH_and_SUPERVISOR_CALL: // 規格書 p.90
+			B_COND      : begin imm8 = ir_q0[7:0]; end // 規格書 p.119
+			// UNCONDITIONAL_BRANCH
+			B_UNCOND    : begin imm11 = ir_q0[10:0]; end // 規格書 p.119
+			// BRANCH_and_MISCELLANEOUS_CONTROL // 規格書 p.91
+			MSR_reg		: begin Rn = ir_q0[3:0];  SYSm = ir_q1[7:0]; end // 規格書 p.310	MSR{<q>} <spec_reg>, <Rn>
+			MRS			: begin Rd = ir_q1[11:8]; SYSm = ir_q1[7:0]; end // 規格書 p.308  MRS{<q>} <Rd>, <spec_reg>
+			BL			: begin imm10 = ir_q0[9:0]; imm11 = ir_q1[10:0]; end // 規格書 p.123  BL{<q>} <label>
 		endcase
 	end
-
+	
+	// BL cmd 規格書 p.123
+	assign J1 = ir_q1[13];
+	assign J2 = ir_q1[11];
+	assign S =  ir_q0[10];
+	assign I1 = ~(J1 ^ S); // I1 = NOT(J1 EOR S); 
+	assign I2 = ~(J2 ^ S); // I2 = NOT(J2 EOR S); 
+	
 	// sign/zero extend
 	always_comb begin
 		imm = 0;
@@ -295,13 +329,22 @@ module inst_decode
 			LDRB_imm5,
 			STRH_imm5,
 			LDRH_imm5: imm = imm5;
+			ADD_SP_imm7,
+			SUB_SP_imm7: imm = imm7;
 			ADD_imm8,
 			SUB_imm8,
 			CMP_imm8,
 			MOV_imm8,
 			STR_imm8_SP,
-			LDR_imm8_SP: imm = imm8;
+			LDR_imm8_SP,
+			ADR,
+			ADD_SP_imm8,
+			BKPT,
+			B_COND: imm = imm8;
+			B_UNCOND: imm = imm11;
 			RSB_imm: imm = 0;
+			// sign extend: imm32 = SignExtend(S:I1:I2:imm10:imm11:'0', 32)
+			BL:	imm = {{8{S}}, I1, I2, imm10, imm11, 1'b0};
 		endcase	
 	end
 	
