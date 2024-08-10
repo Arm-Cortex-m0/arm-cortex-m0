@@ -1,0 +1,5 @@
+0x00000000 210A      MOVS     r1,#0x0A
+0x00000002 220C      MOVS     r2,#0x0C
+0x00000004 230E      MOVS     r3,#0x0E
+0x00000006 B40E      PUSH     {r1-r3}
+0x00000008 BC70      POP      {r4-r6}

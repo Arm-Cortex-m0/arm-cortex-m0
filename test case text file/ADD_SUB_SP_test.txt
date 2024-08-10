@@ -1,0 +1,3 @@
+0x00000000 B003      ADD      sp,sp,#0x0C
+0x00000002 B081      SUB      sp,sp,#0x04
+0x00000004 A803      ADD      r0,sp,#0x0C
