@@ -1374,6 +1374,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10;
+							ram_rd_en = 1;		
 							// WB
 							sel_write_back_data = 0; // PC + imm8							
 							regsfile_wr_en = 1;	
@@ -1425,9 +1426,10 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits	
+							ram_rd_en = 1;		
 							//WB
 							sel_write_back_data = 2; // 8 bits sign extend
-							regsfile_wr_en = 1;		
+							regsfile_wr_en = 1;											
 						end						
 						LDR_reg: begin
 							// ID						
@@ -1439,9 +1441,11 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
-							regsfile_wr_en = 1;								
+							regsfile_wr_en = 1;
+							
 						end
 						LDRH_reg: begin // 自動補0
 							// ID						
@@ -1453,6 +1457,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -1467,6 +1472,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;										
@@ -1481,6 +1487,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -1506,10 +1513,12 @@ module mcu
 							opcode = ADD_OP;
 							setFlags = 0;							
 							// MEM
-							size = 2'b10; // 32 bits					
+							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;
+							
 						end	
 						STRB_imm5: begin
 							// ID
@@ -1531,7 +1540,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b00; // 8 bits		
+							size = 2'b00; // 8 bits
+							ram_rd_en = 1;							
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -1556,7 +1566,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b01; // 16 bits		
+							size = 2'b01; // 16 bits	
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -1580,6 +1591,7 @@ module mcu
 							opcode = ADD_OP;
 							// MEM	
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;								
@@ -2210,6 +2222,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10;
+							ram_rd_en = 1;		
 							// WB
 							sel_write_back_data = 0; // PC + imm8							
 							regsfile_wr_en = 1;	
@@ -2261,9 +2274,10 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits	
+							ram_rd_en = 1;		
 							//WB
 							sel_write_back_data = 2; // 8 bits sign extend
-							regsfile_wr_en = 1;		
+							regsfile_wr_en = 1;											
 						end						
 						LDR_reg: begin
 							// ID						
@@ -2275,9 +2289,11 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
-							regsfile_wr_en = 1;								
+							regsfile_wr_en = 1;
+							
 						end
 						LDRH_reg: begin // 自動補0
 							// ID						
@@ -2289,6 +2305,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -2303,6 +2320,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;										
@@ -2317,6 +2335,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -2332,9 +2351,6 @@ module mcu
 							// MEM
 							ram_wr_en = 1;
 							size = 2'b10; // 32 bits
-							// WB
-							sel_write_back_data = 0;
-							regsfile_wr_en = 0;	
 						end		
 						LDR_imm5: begin
 							// ID		
@@ -2345,10 +2361,12 @@ module mcu
 							opcode = ADD_OP;
 							setFlags = 0;							
 							// MEM
-							size = 2'b10; // 32 bits					
+							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;
+							
 						end	
 						STRB_imm5: begin
 							// ID
@@ -2370,7 +2388,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b00; // 8 bits		
+							size = 2'b00; // 8 bits
+							ram_rd_en = 1;							
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -2395,7 +2414,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b01; // 16 bits		
+							size = 2'b01; // 16 bits	
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -2419,6 +2439,7 @@ module mcu
 							opcode = ADD_OP;
 							// MEM	
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;								
@@ -3050,6 +3071,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10;
+							ram_rd_en = 1;		
 							// WB
 							sel_write_back_data = 0; // PC + imm8							
 							regsfile_wr_en = 1;	
@@ -3101,9 +3123,10 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits	
+							ram_rd_en = 1;		
 							//WB
 							sel_write_back_data = 2; // 8 bits sign extend
-							regsfile_wr_en = 1;		
+							regsfile_wr_en = 1;											
 						end						
 						LDR_reg: begin
 							// ID						
@@ -3115,9 +3138,11 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
-							regsfile_wr_en = 1;								
+							regsfile_wr_en = 1;
+							
 						end
 						LDRH_reg: begin // 自動補0
 							// ID						
@@ -3129,6 +3154,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -3143,6 +3169,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;										
@@ -3157,6 +3184,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -3172,9 +3200,6 @@ module mcu
 							// MEM
 							ram_wr_en = 1;
 							size = 2'b10; // 32 bits
-							// WB
-							sel_write_back_data = 0;
-							regsfile_wr_en = 0;	
 						end		
 						LDR_imm5: begin
 							// ID		
@@ -3185,10 +3210,12 @@ module mcu
 							opcode = ADD_OP;
 							setFlags = 0;							
 							// MEM
-							size = 2'b10; // 32 bits					
+							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;
+							
 						end	
 						STRB_imm5: begin
 							// ID
@@ -3210,7 +3237,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b00; // 8 bits		
+							size = 2'b00; // 8 bits
+							ram_rd_en = 1;							
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -3235,7 +3263,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b01; // 16 bits		
+							size = 2'b01; // 16 bits	
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -3259,6 +3288,7 @@ module mcu
 							opcode = ADD_OP;
 							// MEM	
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;								
@@ -3892,6 +3922,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10;
+							ram_rd_en = 1;		
 							// WB
 							sel_write_back_data = 0; // PC + imm8							
 							regsfile_wr_en = 1;	
@@ -3943,9 +3974,10 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits	
+							ram_rd_en = 1;		
 							//WB
 							sel_write_back_data = 2; // 8 bits sign extend
-							regsfile_wr_en = 1;		
+							regsfile_wr_en = 1;											
 						end						
 						LDR_reg: begin
 							// ID						
@@ -3957,9 +3989,11 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
-							regsfile_wr_en = 1;								
+							regsfile_wr_en = 1;
+							
 						end
 						LDRH_reg: begin // 自動補0
 							// ID						
@@ -3971,6 +4005,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -3985,6 +4020,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b00; // 8 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;										
@@ -3999,6 +4035,7 @@ module mcu
 							setFlags = 0;							
 							// MEM
 							size = 2'b01; // 16 bits
+							ram_rd_en = 1;
 							//WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;									
@@ -4014,9 +4051,6 @@ module mcu
 							// MEM
 							ram_wr_en = 1;
 							size = 2'b10; // 32 bits
-							// WB
-							sel_write_back_data = 0;
-							regsfile_wr_en = 0;	
 						end		
 						LDR_imm5: begin
 							// ID		
@@ -4027,10 +4061,12 @@ module mcu
 							opcode = ADD_OP;
 							setFlags = 0;							
 							// MEM
-							size = 2'b10; // 32 bits					
+							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;
+							
 						end	
 						STRB_imm5: begin
 							// ID
@@ -4052,7 +4088,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b00; // 8 bits		
+							size = 2'b00; // 8 bits
+							ram_rd_en = 1;							
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -4077,7 +4114,8 @@ module mcu
 							// EX
 							opcode = ADD_OP;							
 							// MEM
-							size = 2'b01; // 16 bits		
+							size = 2'b01; // 16 bits	
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;							
@@ -4101,6 +4139,7 @@ module mcu
 							opcode = ADD_OP;
 							// MEM	
 							size = 2'b10; // 32 bits
+							ram_rd_en = 1;
 							// WB
 							sel_write_back_data = 1;
 							regsfile_wr_en = 1;								
