@@ -6,8 +6,6 @@
   <img src="https://img.shields.io/badge/Architecture-5--Stage%20Pipeline-red?style=for-the-badge" alt="Pipeline">
   <img src="https://img.shields.io/badge/Verification-ModelSim-yellow?style=for-the-badge" alt="ModelSim">
 </p>
-## 📝 Project Overview
-This repository contains the RTL implementation of an **ARM Cortex-M0 compatible CPU core** written in SystemVerilog. Designed from scratch, this core features a classic **5-stage pipeline** and specifically addresses the architectural complexities of the ARMv6-M instruction set, including the decoding and execution of **16/32-bit mixed-width instructions**.
 
 **Key Highlights:**
 - **5-Stage Pipelining:** Classic `Fetch`, `Decode`, `Execute`, `Memory`, and `Writeback` stages.
